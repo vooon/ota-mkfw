@@ -3,25 +3,31 @@
 extern crate clap;
 use clap::{App, ArgMatches};
 
-extern crate cbor;
-use cbor::Encoder;
+//extern crate cbor;
+//use cbor::Encoder;
 
-//extern crate serialize;
-//extern crate rustc_serialize;
-//use rustc_serialize::{Encodable};
-//use serialize::{Encodable};
+//#[feature(plugin)]
+//#[plugin(serde_macros)]
+
+extern crate serde;
+extern crate serde_cbor;
+
+use serde::ser::Serialize;
+use serde::de::Deserialize;
+use serde_cbor::to_writer;
 
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::io::prelude::*;
 use std::io::BufWriter;
 use std::fs::File;
 
 static MAGIC_OTAFWV1: &'static str = "OTAFWv1";
 static UNKNOWN: &'static str = "UNKNOWN";
-
 /*
-#[derive(Debug, Encodable)]
-struct OFWHeader {
+//#[derive(Debug, PartialEq, Serialize)]
+#[derive(Serialize, Deserialize)]
+struct OFWFile {
     magic: String,
     description: String,
     //build_date: String, TAG0
@@ -31,7 +37,8 @@ struct OFWHeader {
     data: HashMap<String, OFWImage>,
 }
 
-#[derive(Debug, Encodable)]
+//#[derive(Debug, PartialEq, Serialize)]
+#[derive(Serialize, Deserialize)]
 struct OFWImage {
     size: u64,
     sha1sum: Option<Vec<u8>>,
@@ -39,10 +46,12 @@ struct OFWImage {
     dfu_alt: Option<u32>,
     payload: Vec<u8>,
 }
+*/
+include!(concat!(env!("OUT_DIR"), "/lib.rs"));
 
-impl OFWHeader {
-    fn new(description: &str, board: &str) -> OFWHeader {
-        OFWHeader {
+impl OFWFile {
+    fn new(description: &str, board: &str) -> OFWFile {
+        OFWFile {
             magic: MAGIC_OTAFWV1.to_string(),
             description: description.to_string(),
             board: board.to_string(),
@@ -53,28 +62,33 @@ impl OFWHeader {
         }
     }
 }
-*/
 
 fn do_mkfw(matches: &ArgMatches) {
     println!("{:?}", matches);
 
-    /*
-    let mut header = OFWHeader::new(
+    let mut header = OFWFile::new(
         matches.value_of("desc").unwrap_or(""),
         matches.value_of("board").unwrap());
-*/
 
-    let mut header = HashMap::new();
-    header.insert("magic", MAGIC_OTAFWV1);
-    header.insert("description", matches.value_of("desc").unwrap_or(""));
-    header.insert("board", matches.value_of("board").unwrap());
+    //let mut header = HashMap::new();
+    //header.insert("magic", MAGIC_OTAFWV1);
+    //header.insert("description", matches.value_of("desc").unwrap_or(""));
+    //header.insert("board", matches.value_of("board").unwrap());
 
-    println!("Make header: {:?}", header);
+    //let mut data = HashMap::new();
+    //data.insert("firmware.bin", vec!["123", "321"]);
 
-    let file = File::create(matches.value_of("OUTPUT").unwrap()).unwrap();
-    //let mut writer = BufWriter::new(file);
-    let mut encoder = Encoder::from_writer(file);
-    encoder.encode(header);
+    //header.insert("data", data);
+
+    println!("Header: {:?}", header);
+
+    let mut file = File::create(matches.value_of("OUTPUT").unwrap()).unwrap();
+    //let mut file = BufWriter::new(file);
+    //let mut encoder = Encoder::from_writer(file);
+    //encoder.encode(header);
+    //encoder.flush();
+    //
+    to_writer(&mut file, &header);
 }
 
 fn do_upload(matches: &ArgMatches) {
