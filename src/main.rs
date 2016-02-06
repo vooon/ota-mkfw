@@ -6,5 +6,7 @@ use clap::App;
 
 fn main() {
     let yaml = load_yaml!("cli.yaml");
-    let matches = App::from_yaml(yaml).get_matches();
+    let matches = App::from_yaml(yaml)
+        .version(crate_version!())
+        .get_matches();
 }

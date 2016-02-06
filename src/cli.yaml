@@ -1,8 +1,82 @@
 # -*- yaml -*-
 # vim:set ts=2 sw=2 et:
 
-name: ota-mkfw
+name: ota-tool
+about: Firmware image packer for OTA
+author: Vladimir Ermakov <vooon341@gmail.com>
 args:
-  - config:
-      short: c
-      help: test
+  - debug:
+      short: d
+      long: debug
+      help: Enable debugging messages
+
+subcommands:
+  - mkfw:
+      name: ota-mkfw  # seems clap-rs don't use arg[0] for subcommand selection :(
+      about: "Create image file"
+      args:
+        - OUTPUT:
+            short: o
+            long: output
+            value_name: FILE
+            help: Output file
+            takes_value: true
+            required: true
+        #- name:
+        #  short: n
+        #  long: name
+        #  help: Image name (e.g. firmware.bin)
+
+      #arg_groups:
+      #  - INPUT:
+      #      args:
+      #        - name
+  - upload:
+      name: ota-upload
+      about: "Upload firmware image to OTA server"
+      args:
+        - url:
+            short: u
+            long: url
+            help: Upload form URL
+            #default: http://localhost:8081/
+            takes_value: true
+        - repo:
+            short: p
+            long: repo
+            help: Repository name
+            takes_value: true
+            required: true
+        - key:
+            short: k
+            long: key
+            help: Repository access key
+            takes_value: true
+            required: true
+        - rev:
+            short: r
+            long: rev
+            help: SCM revision
+            takes_value: true
+            conflicts_with: [git_info]
+        - tag:
+            short: t
+            long: tag
+            help: SCM tag (release)
+            takes_value: true
+            conflicts_with: [git_info]
+        - git_info:
+            long: git-info
+            help: Extract revision and tag from GIT SCM
+        - build_date:
+            short: D
+            long: build-date
+            help: "Build date RFC3339 or ISO8601 (default: now)"
+            takes_value: true
+        - file_type:
+            long: file-type
+            help: File type (for index)
+            takes_value: true
+        - FILE:
+            required: true
+            help: File to upload.
