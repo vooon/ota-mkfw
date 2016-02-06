@@ -6,3 +6,4 @@ authors = ["Vladimir Ermakov <vooon341@gmail.com"]
 [dependencies]
 clap = {version="2", features=["yaml"]}
 cbor = "0.3"
+rustc-serialize = "*"
