@@ -2,3 +2,6 @@
 name = "ota-mkfw"
 version = "0.0.1"
 authors = ["Vladimir Ermakov <vooon341@gmail.com"]
+
+[dependencies]
+clap = {version="2", features=["yaml"]}

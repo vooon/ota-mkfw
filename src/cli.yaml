@@ -1,0 +1,8 @@
+# -*- yaml -*-
+# vim:set ts=2 sw=2 et:
+
+name: ota-mkfw
+args:
+  - config:
+      short: c
+      help: test

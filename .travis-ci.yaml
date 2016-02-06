@@ -1,0 +1,8 @@
+# vim:set ts=2 sw=2 et:
+
+sudo: false
+language: rust
+rust: stable
+
+script:
+  - cargo build
