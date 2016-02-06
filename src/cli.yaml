@@ -27,10 +27,15 @@ subcommands:
         #  long: name
         #  help: Image name (e.g. firmware.bin)
 
-      #arg_groups:
-      #  - INPUT:
-      #      args:
-      #        - name
+      arg_groups:
+        - INPUT:
+            args:
+              - name:
+                  short: n
+                  long: name
+                  help: Image name (e.g. firmware.bin)
+
+
   - upload:
       name: ota-upload
       about: "Upload firmware image to OTA server"
