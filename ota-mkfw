@@ -43,13 +43,16 @@ def main():
 
     args = parser.parse_args()
 
+    # I found bug in _cbor.so: don't encode Tag 0 (ver 0.1.25)
+    # https://bitbucket.org/bodhisnarkva/cbor/issues/11/failed-to-encode-tag-0-invalid-negative
+
     image_header = {
         u'magic': u'OTAFWv1',
         u'description': args.desc or u'',
-        u'build_date': args.build_date,
-        u'version': args.out_version,
-        u'revision': args.rev,
-        u'board': args.board,
+        u'build_date': cbor.Tag(0, args.build_date.isoformat().decode()),
+        u'version': args.out_version.decode(),
+        u'revision': args.rev.decode(),
+        u'board': args.board.decode(),
         u'data': {},
     }
 
@@ -78,21 +81,18 @@ def main():
             image[u'sha1sum'] = bytes(hasher.digest())
             if len(buffer) > COMPRESS_MIN:
                 # Tag: 'z' * 100 + 22 -> zipped, base64 repr
-                image['payload'] = cbor.Tag(12222, bytes(zlib.compress(buffer, 9)))
+                image[u'payload'] = cbor.Tag(12222, bytes(zlib.compress(buffer, 9)))
             else:
-                image['payload'] = buffer
+                image[u'payload'] = buffer
                 # possibly tag 22 marks that byte string need base64 for text conv
                 #image['payload'] = cbor.Tag(22, bytes(buffer))
 
-        image_header["data"][name] = image
+        image_header[u'data'][name.decode()] = image
 
     with args.outfile as fd:
-        tag0 = cbor.ClassTag(1, DT,
-                             lambda x: x.isoformat().decode(),
-                             lambda x: dt_parse(x))
-        tm = cbor.TagMapper([tag0])
-
-        tm.dump(image_header, fd)
+        # TODO: add version check against <= 0.1.25 to use default `cbor.dump()`
+        # Use pure python version because bug in C impl.
+        cbor.cbor.dump(image_header, fd)
 
 
 if __name__ == "__main__":
