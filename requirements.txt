@@ -1,2 +1,3 @@
 cbor
 python-dateutil
+requests

@@ -8,7 +8,7 @@ with open("requirements.txt") as fd:
 
 setup(
     name='ota-mkfw',
-    version='0.1.0',
+    version='0.1.1',
     description='Simple firmware image packer',
     url='https://github.com/vooon/ota-mkfw',
 
@@ -22,7 +22,8 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'ota-mkfw=ota_mkfw:main'
+            'ota-mkfw=ota_mkfw:main',
+            'ota-upload=ota_upload:main',
         ]
     },
 )
