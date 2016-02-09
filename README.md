@@ -13,29 +13,38 @@ File format
 For CBOR there exists own CDDL, but JSON-like is easier to understood:
 
 ```json
-// File (header)
-{
-	"magic": "OTAFWv1",
-	"description": "",
-	"build_date": Tag(0, "<RFC3339 time>"),
-	"version": "0.1.0",
-	"revision": "<git hash>",
-	"git-identity": "<optional git describe>",
-	"board": "<some id>",
-	"data": {
-		"firmware.bin": Image{}, // required
-		"parameters.xml": Image{}, // optional
+// File
+[	// File root element is Array
+	"OTAFWv1", 	// first element is magic string (in map it's position unpredictable)
+	Metadata{},	// second - Metadata object (map)
+	{		// third element - image map
+		"firmware.bin": Image{},	// required
+		"parameters.xml": Image{},	// optional additional data
 		...
 	}
+]
+
+// Metadata
+{
+	"description": "some description",
+	"build_date": Tag(0, "<time>"),	// RFC3339, alternative: Tag(1, <posix time>)
+	"version": "0.1.0",		// may be git identity
+	"revision": "<git hash>",	// SCM revision. String.
+	"board": "<some id>",		// Board ID, String
+	...				// extensions
 }
 
 // Image
 {
-	"size": 123,				// to verify payload
-	"sha1sum": "<byte string (20 bytes)>",	// optional
-	"payload": "<non compressed byte string>"
-	// Alternative: Tag(22, "<byte stirng>") -> text exporter will use base64 (like in PX4 JSON)
-	// Gzipped: Tag(12222, "<defalted byte string>") -> tag mark that inflating is required, base64 for exporter
+	"load_address": 0x00800000,		// optional, flash location
+	"dfu_alt": 0,				// DFU Alternate setting number (look dfu-util)
+
+	"size": 123,				// uncompressed size to verify payload
+	"sha1sum": "<byte string (20 bytes)>",	// optional SHA1 digest of uncompressed data
+
+	"image": "<uncompressed byte string>"	// File data. May be raw byte string and compressed (tagged)
+						// deflated: Tag(12222, "<defalted byte string>")
+	...	// extensions
 }
 ```
 
