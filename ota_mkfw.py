@@ -9,6 +9,7 @@ import argparse
 import cbor
 import zlib
 import hashlib
+import subprocess
 from datetime import datetime as DT
 from dateutil.parser import parse as dt_parse
 from dateutil.tz import tzlocal
@@ -25,10 +26,10 @@ def main():
     meta = parser.add_argument_group("Metadata")
     meta.add_argument("--desc", help="Description")
     meta.add_argument("-b", "--board", required=True, help="Board ID")
-    meta.add_argument("-v", "--out-version", required=True, help="Version")
-    meta.add_argument("-r", "--rev", required=True, help="SCM revision")
-    meta.add_argument("--git-identity", action="store_true", help="Get revision and version from GIT SCM")
     meta.add_argument("-d", "--build-date", type=dt_parse, default=DT.now(tz=tzlocal()), help="Build date")
+    meta_scm_excl = meta.add_mutually_exclusive_group(required=True)
+    meta_scm_excl.add_argument("-vr", "--ver-rev", nargs=2, metavar=('VER', 'REV'), help="Version and SCM revision strings")
+    meta_scm_excl.add_argument("--git-identity", action="store_true", help="Get revision and version from GIT SCM")
 
     # unfortunately it can't help parse flags like this: "-n abc.bin file.bin -a 0x00800000 file2.bin" to:
     # <group #1: name=abc.bin srcfile=file.bin>
@@ -44,12 +45,22 @@ def main():
     # I found bug in _cbor.so: don't encode Tag 0 (ver 0.1.25)
     # https://bitbucket.org/bodhisnarkva/cbor/issues/11/failed-to-encode-tag-0-invalid-negative
 
+    if args.git_identity:
+        p = subprocess.Popen(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE)
+        rev_parse, err = p.communicate()
+
+        p = subprocess.Popen(["git", "describe", "--always", "--dirty"], stdout=subprocess.PIPE)
+        describe, err = p.communicate()
+
+        ver, rev = describe.strip(), rev_parse.strip()
+    else:
+        ver, rev = args.ver_rev
+
     image_meta = {
-        u'magic': u'OTAFWv1',
         u'description': args.desc or u'',
         u'build_date': cbor.Tag(0, args.build_date.isoformat().decode()),
-        u'version': args.out_version.decode(),
-        u'revision': args.rev.decode(),
+        u'version': ver.decode(),
+        u'revision': rev.decode(),
         u'board': args.board.decode(),
     }
 
