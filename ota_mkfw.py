@@ -15,9 +15,6 @@ from dateutil.parser import parse as dt_parse
 from dateutil.tz import tzlocal
 from os.path import basename
 
-# minimum size to compress
-COMPRESS_MIN = 250
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -89,9 +86,12 @@ def main():
 
             image[u'size'] = len(buffer)
             image[u'sha1sum'] = bytes(hasher.digest())
-            if len(buffer) > COMPRESS_MIN:
+
+            # less effective if data to random, but usual case use compressed
+            deflated_buffer = bytes(zlib.compress(buffer, 9))
+            if len(buffer) > len(deflated_buffer):
                 # Tag: 'z' * 100 + 22 -> zipped, base64 repr
-                image[u'image'] = cbor.Tag(12222, bytes(zlib.compress(buffer, 9)))
+                image[u'image'] = cbor.Tag(12222, deflated_buffer)
             else:
                 image[u'image'] = buffer
 
