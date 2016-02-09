@@ -8,7 +8,7 @@ with open("requirements.txt") as fd:
 
 setup(
     name='ota-mkfw',
-    version='0.0.1',
+    version='0.1.0',
     description='Simple firmware image packer',
     url='https://github.com/vooon/ota-mkfw',
 
