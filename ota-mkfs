@@ -7,11 +7,22 @@ Simple firmware packager tool.
 
 import argparse
 import cbor
+import zlib
+import hashlib
+from datetime import datetime as DT
+from dateutil.parser import parse as dt_parse
+from dateutil.tz import tzlocal
+from os.path import basename
+
+from pprint import pprint
+
+# minimum size to compress
+COMPRESS_MIN = 250
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("-o", "--outfile", metavar="OUTFILE", type=argparse.FileType("w"), required=True, help="Output file")
+    parser.add_argument("-o", "--outfile", metavar="OUTFILE", type=argparse.FileType("wb"), required=True, help="Output file")
 
     meta = parser.add_argument_group("Metadata")
     meta.add_argument("--desc", help="Description")
@@ -19,27 +30,69 @@ def main():
     meta.add_argument("-v", "--out-version", required=True, help="Version")
     meta.add_argument("-r", "--rev", required=True, help="SCM revision")
     meta.add_argument("--git-identity", action="store_true", help="Get revision and version from GIT SCM")
-    meta.add_argument("-d", "--build-date", help="Build date")
+    meta.add_argument("-d", "--build-date", type=dt_parse, default=DT.now(tz=tzlocal()), help="Build date")
 
     # unfortunately it can't help parse flags like this: "-n abc.bin file.bin -a 0x00800000 file2.bin" to:
     # <group #1: name=abc.bin srcfile=file.bin>
     # <group #2: load_addr=0x00800000 srcfile=file2.bin>
     srcgroup = parser.add_argument_group("Source file arguments")
-    srcgroup.add_argument("-n", "--name", nargs="+", help="Image name (e.g. firmware.bin)")
-    srcgroup.add_argument("-a", "--load-addr", metavar="ADDR", type=lambda x: int(x, base=0), nargs="+", help="Image load address")
-    srcgroup.add_argument("--dfu-alt", metavar="N", type=int, help="DFU Alternate setting")
-    srcgroup.add_argument("srcfile", metavar="INFILE", type=argparse.FileType("r"), nargs="+", help="Source file(s)")
+    srcgroup.add_argument("-n", "--name", action="append", help="Image name (e.g. firmware.bin)")
+    srcgroup.add_argument("-a", "--load-addr", metavar="ADDR", type=lambda x: int(x, base=0), action="append", help="Image load address")
+    srcgroup.add_argument("--dfu-alt", metavar="N", type=int, action="append", help="DFU Alternate setting")
+    srcgroup.add_argument("infile", metavar="INFILE", type=argparse.FileType("rb"), nargs="+", help="Source file(s)")
 
     args = parser.parse_args()
 
-    print args
-
-    image = {
-        "magic": "OTAFWv1",
-        "data": {}
+    image_header = {
+        u'magic': u'OTAFWv1',
+        u'description': args.desc or u'',
+        u'build_date': args.build_date,
+        u'version': args.out_version,
+        u'revision': args.rev,
+        u'board': args.board,
+        u'data': {},
     }
 
+    def getindex(lst, idx, default=None):
+        if lst and len(lst) > idx:
+            return lst[idx]
+        else:
+            return default
 
+    for i, src in enumerate(args.infile):
+        name = getindex(args.name, i, basename(src.name))
+        addr = getindex(args.load_addr, i)
+        dalt = getindex(args.dfu_alt, i)
+
+        image = {}
+        if addr >= 0: image[u'load_addr'] = addr
+        if dalt >= 0: image[u'dfu_alt'] = dalt
+
+        with src as fd:
+            buffer = bytes(fd.read())
+
+            hasher = hashlib.sha1()
+            hasher.update(buffer)
+
+            image[u'size'] = len(buffer)
+            image[u'sha1sum'] = bytes(hasher.digest())
+            if len(buffer) > COMPRESS_MIN:
+                # Tag: 'z' * 100 + 22 -> zipped, base64 repr
+                image['payload'] = cbor.Tag(12222, bytes(zlib.compress(buffer, 9)))
+            else:
+                image['payload'] = buffer
+                # possibly tag 22 marks that byte string need base64 for text conv
+                #image['payload'] = cbor.Tag(22, bytes(buffer))
+
+        image_header["data"][name] = image
+
+    with args.outfile as fd:
+        tag0 = cbor.ClassTag(1, DT,
+                             lambda x: x.isoformat().decode(),
+                             lambda x: dt_parse(x))
+        tm = cbor.TagMapper([tag0])
+
+        tm.dump(image_header, fd)
 
 
 if __name__ == "__main__":
