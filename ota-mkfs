@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Simple firmware packager tool.
+"""
+
+import argparse
+import cbor
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-o", "--outfile", metavar="OUTFILE", type=argparse.FileType("w"), required=True, help="Output file")
+
+    meta = parser.add_argument_group("Metadata")
+    meta.add_argument("--desc", help="Description")
+    meta.add_argument("-b", "--board", required=True, help="Board ID")
+    meta.add_argument("-v", "--out-version", required=True, help="Version")
+    meta.add_argument("-r", "--rev", required=True, help="SCM revision")
+    meta.add_argument("--git-identity", action="store_true", help="Get revision and version from GIT SCM")
+    meta.add_argument("-d", "--build-date", help="Build date")
+
+    # unfortunately it can't help parse flags like this: "-n abc.bin file.bin -a 0x00800000 file2.bin" to:
+    # <group #1: name=abc.bin srcfile=file.bin>
+    # <group #2: load_addr=0x00800000 srcfile=file2.bin>
+    srcgroup = parser.add_argument_group("Source file arguments")
+    srcgroup.add_argument("-n", "--name", nargs="+", help="Image name (e.g. firmware.bin)")
+    srcgroup.add_argument("-a", "--load-addr", metavar="ADDR", type=lambda x: int(x, base=0), nargs="+", help="Image load address")
+    srcgroup.add_argument("--dfu-alt", metavar="N", type=int, help="DFU Alternate setting")
+    srcgroup.add_argument("srcfile", metavar="INFILE", type=argparse.FileType("r"), nargs="+", help="Source file(s)")
+
+    args = parser.parse_args()
+
+    print args
+
+    image = {
+        "magic": "OTAFWv1",
+        "data": {}
+    }
+
+
+
+
+if __name__ == "__main__":
+    main()
