@@ -83,8 +83,6 @@ def main():
                 image[u'image'] = cbor.Tag(12222, bytes(zlib.compress(buffer, 9)))
             else:
                 image[u'image'] = buffer
-                # possibly tag 22 marks that byte string need base64 for text conv
-                #image['payload'] = cbor.Tag(22, bytes(buffer))
 
         images[name.decode()] = image
 
