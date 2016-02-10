@@ -1,0 +1,22 @@
+# -*- yaml -*-
+# vim:set ts=2 sw=2 et:
+image: ubuntu:xenial
+
+stages:
+  - py2
+  - py3
+
+py2_job:
+  stage: py2
+  script:
+    - python --version
+    - pip install -e .
+    - nosetests
+
+py3_job:
+  stage: py3
+  script:
+    - python3 --version
+    - pip3 install -e .
+    - nosetests
+
