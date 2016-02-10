@@ -10,4 +10,4 @@ py2_job:
   script:
     - python --version
     - pip install -e .
-    - nosetests
+    #- nosetests
