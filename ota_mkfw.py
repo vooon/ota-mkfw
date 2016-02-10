@@ -98,9 +98,8 @@ def main():
         images[name.decode()] = image
 
     with args.outfile as fd:
-        # TODO: add version check against <= 0.1.25 to use default `cbor.dump()`
-        # Use pure python version because bug in C impl.
-        cbor.cbor.dump(
+        # In version 1.0.0 Tag(0) bug fixed.
+        cbor.dump(
             (u"OTAFWv1", image_meta, images),
             fd)
 
