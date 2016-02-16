@@ -24,6 +24,7 @@ setup(
         'console_scripts': [
             'ota-mkfw=otatools.mkfw:main',
             'ota-upload=otatools.upload:main',
+            'ota-dfu=otatools.dfu:main',
         ]
     },
 )
