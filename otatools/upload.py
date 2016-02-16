@@ -24,6 +24,13 @@ def main():
         v = env(name)
         return {"required": v is None, "default": v}
 
+    def dflt_build_date():
+        v = env("BUILD_DATE")
+        if v:
+            return dt_parse(v)
+        else:
+            return DT.now(tz=tzlocal())
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("file", type=argparse.FileType("rb"), help="File to send")
     parser.add_argument("-s", "--server", default=env("OTA_SERVER", "http://localhost:8081"), help="Form url")
@@ -31,7 +38,7 @@ def main():
     parser.add_argument("-p", "--key", help="Repositopy passkey", **envreq("OTA_KEY"))
     parser.add_argument("--rev", required=True, help="SCM revision")
     parser.add_argument("--tag", help="SCM tag (version)")
-    parser.add_argument("-d", "--build-date", type=dt_parse, default=DT.now(tz=tzlocal()), help="Build date")
+    parser.add_argument("-d", "--build-date", type=dt_parse, default=dflt_build_date(), help="Build date")
     parser.add_argument("-t", "--file-type", help="File type (for index)")
 
     args = parser.parse_args()

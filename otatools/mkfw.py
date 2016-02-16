@@ -10,6 +10,7 @@ import cbor
 import zlib
 import hashlib
 import subprocess
+import os
 from datetime import datetime as DT
 from dateutil.parser import parse as dt_parse
 from dateutil.tz import tzlocal
@@ -17,13 +18,20 @@ from os.path import basename
 
 
 def main():
+    def dflt_build_date():
+        v = os.environ.get("BUILD_DATE")
+        if v:
+            return dt_parse(v)
+        else:
+            return DT.now(tz=tzlocal())
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-o", "--outfile", metavar="OUTFILE", type=argparse.FileType("wb"), required=True, help="Output file")
 
     meta = parser.add_argument_group("Metadata")
     meta.add_argument("--desc", help="Description")
     meta.add_argument("-b", "--board", required=True, help="Board ID")
-    meta.add_argument("-d", "--build-date", type=dt_parse, default=DT.now(tz=tzlocal()), help="Build date")
+    meta.add_argument("-d", "--build-date", type=dt_parse, default=dflt_build_date(), help="Build date")
     meta_scm_excl = meta.add_mutually_exclusive_group(required=True)
     meta_scm_excl.add_argument("-vr", "--ver-rev", nargs=2, metavar=('VER', 'REV'), help="Version and SCM revision strings")
     meta_scm_excl.add_argument("--git-identity", action="store_true", help="Get revision and version from GIT SCM")
