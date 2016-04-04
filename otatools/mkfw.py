@@ -27,6 +27,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-o", "--outfile", metavar="OUTFILE", type=argparse.FileType("wb"), required=True, help="Output file")
+    parser.add_argument("--no-compress", action="store_true", help="Do not compress images")
 
     meta = parser.add_argument_group("Metadata")
     meta.add_argument("--desc", help="Description")
@@ -97,7 +98,7 @@ def main():
 
             # less effective if data to random, but usual case use compressed
             deflated_buffer = bytes(zlib.compress(buffer, 9))
-            if len(buffer) > len(deflated_buffer):
+            if len(buffer) > len(deflated_buffer) and not args.no_compress:
                 # Tag: 'z' * 100 + 22 -> zipped, base64 repr
                 image[u'image'] = cbor.Tag(12222, deflated_buffer)
             else:
