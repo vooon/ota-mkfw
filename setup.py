@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
@@ -8,7 +8,7 @@ with open("requirements.txt") as fd:
 
 setup(
     name='otatools',
-    version='0.3.1',
+    version='0.4.0',
     description='Simple firmware image packer',
     url='https://github.com/vooon/ota-mkfw',
 

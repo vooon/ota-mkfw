@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -58,16 +58,16 @@ def main():
         p = subprocess.Popen(["git", "describe", "--always", "--dirty"], stdout=subprocess.PIPE)
         describe, err = p.communicate()
 
-        ver, rev = describe.strip(), rev_parse.strip()
+        ver, rev = describe.decode().strip(), rev_parse.decode().strip()
     else:
         ver, rev = args.ver_rev
 
     image_meta = {
-        u'description': args.desc or u'',
-        u'build_date': cbor.Tag(0, args.build_date.isoformat().decode()),
-        u'version': ver.decode(),
-        u'revision': rev.decode(),
-        u'board': args.board.decode(),
+        'description': args.desc or '',
+        'build_date': cbor.Tag(0, args.build_date.isoformat()),
+        'version': ver,
+        'revision': rev,
+        'board': args.board,
     }
 
     images = {}
@@ -84,8 +84,8 @@ def main():
         dalt = getindex(args.dfu_alt, i)
 
         image = {}
-        if addr >= 0: image[u'load_address'] = addr
-        if dalt >= 0: image[u'dfu_alt'] = dalt
+        if addr is not None: image['load_address'] = addr
+        if dalt is not None: image['dfu_alt'] = dalt
 
         with src as fd:
             buffer = bytes(fd.read())
@@ -93,23 +93,23 @@ def main():
             hasher = hashlib.sha1()
             hasher.update(buffer)
 
-            image[u'size'] = len(buffer)
-            image[u'sha1sum'] = bytes(hasher.digest())
+            image['size'] = len(buffer)
+            image['sha1sum'] = bytes(hasher.digest())
 
             # less effective if data to random, but usual case use compressed
             deflated_buffer = bytes(zlib.compress(buffer, 9))
             if len(buffer) > len(deflated_buffer) and not args.no_compress:
                 # Tag: 'z' * 100 + 22 -> zipped, base64 repr
-                image[u'image'] = cbor.Tag(12222, deflated_buffer)
+                image['image'] = cbor.Tag(12222, deflated_buffer)
             else:
-                image[u'image'] = buffer
+                image['image'] = buffer
 
-        images[name.decode()] = image
+        images[name] = image
 
     with args.outfile as fd:
         # In version 1.0.0 Tag(0) bug fixed.
         cbor.dump(
-            (u"OTAFWv1", image_meta, images),
+            ("OTAFWv1", image_meta, images),
             fd)
 
 

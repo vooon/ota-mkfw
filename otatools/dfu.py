@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -24,8 +24,6 @@ def main():
     parser.add_argument("-d", "--dfu-args", action="append", help="dfu-util arguments")
 
     args = parser.parse_args()
-
-    print args
 
     tag0 = cbor.ClassTag(0, DT, None, decode_function=dt_parse)
     tag12222 = cbor.ClassTag(12222, bytes, None, decode_function=zlib.decompress)
